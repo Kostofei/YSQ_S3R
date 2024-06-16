@@ -144,7 +144,7 @@ async def handle_question(message: types.Message, state: FSMContext):
         current_question_number = int(current_state.split(':')[1][-2:])
         await state.update_data({f'question{current_question_number:02}': message.text})
         next_question_number = current_question_number + 1
-        if next_question_number <= 10:
+        if next_question_number <= 90:
             await message.answer(f"{next_question_number}. {questions[next_question_number]}")
             await state.set_state(getattr(QuestionList, f'question{next_question_number:02}'))
         else:
