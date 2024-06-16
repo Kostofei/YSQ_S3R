@@ -136,6 +136,8 @@ async def start_cmd(message: types.Message, state: FSMContext):
     if current_state:
         await state.clear()
         await message.answer("Тест остановлен", reply_markup=del_keyboard)
+    else:
+        await message.answer("Тест не запущен, для запуска теста введите /start", reply_markup=del_keyboard)
 
 
 @user_private_router.message(lambda message: message.text in [i for i in answers.values()])
@@ -174,7 +176,7 @@ async def complete_survey(message: types.Message, state: FSMContext):
             if int(key[-2:]) in scheme[2]:
                 scheme[3] += int(value[0])
 
-    result_text = '\n'.join([f"{scheme[0]} {scheme[1]} - {(scheme[3] - 5) / 25 * 100}%" for scheme in schemes])
+    result_text = '\n'.join([f"{scheme[0]} {scheme[1]} - {(scheme[3] - 5) / 25 * 100:.0f}%" for scheme in schemes])
     await message.answer(result_text, parse_mode=ParseMode.MARKDOWN)
 
     await state.clear()
