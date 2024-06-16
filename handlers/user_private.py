@@ -7,7 +7,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import FSInputFile
 
-# from app import bot
 from data_file.answers_list import answers
 from data_file.questions_list import questions
 from data_file.schemes_list import schemes
