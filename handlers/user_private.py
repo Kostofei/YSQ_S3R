@@ -128,14 +128,15 @@ async def start_cmd(message: types.Message):
         'Данный бот предназначен для (текст описания бота). Отвечайте на вопросы исключительно с помощью кнопок выбора.',
         reply_markup=del_keyboard)
 
+
 @user_private_router.message(F.text.lower() == "стоп")
 @user_private_router.message(Command("stop"))
 async def start_cmd(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state:
         await state.clear()
-        await message.answer("Тест остановлен",
-                                 reply_markup=del_keyboard)
+        await message.answer("Тест остановлен", reply_markup=del_keyboard)
+
 
 @user_private_router.message(lambda message: message.text in [i for i in answers.values()])
 async def handle_question(message: types.Message, state: FSMContext):
@@ -150,8 +151,7 @@ async def handle_question(message: types.Message, state: FSMContext):
         else:
             await complete_survey(message, state)
     else:
-        await message.answer("Тест не запущен, для запуска введите /start",
-                             reply_markup=del_keyboard)
+        await message.answer("Тест не запущен, для запуска введите /start", reply_markup=del_keyboard)
 
 
 @user_private_router.message(F.text)
@@ -174,7 +174,7 @@ async def complete_survey(message: types.Message, state: FSMContext):
             if int(key[-2:]) in scheme[2]:
                 scheme[3] += int(value[0])
 
-    result_text = '\n'.join([f"{scheme[0]} {scheme[1]} - {(scheme[3]-5)/25*100}%" for scheme in schemes])
+    result_text = '\n'.join([f"{scheme[0]} {scheme[1]} - {(scheme[3] - 5) / 25 * 100}%" for scheme in schemes])
     await message.answer(result_text, parse_mode=ParseMode.MARKDOWN)
 
     await state.clear()
