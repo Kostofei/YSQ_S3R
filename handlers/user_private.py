@@ -15,7 +15,7 @@ from filters.chat_types import ChatTypeFilter
 from kbds.reply import del_keyboard, answer_keyboard
 
 user_private_router = Router()
-user_private_router.message.filter(ChatTypeFilter(['private', 'group']))
+user_private_router.message.filter(ChatTypeFilter(['private']))
 
 
 class Form(StatesGroup):
