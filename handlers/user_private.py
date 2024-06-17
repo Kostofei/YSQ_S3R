@@ -40,7 +40,10 @@ async def start_cmd(message: types.Message, state: FSMContext):
 @user_private_router.message(Command("info"))
 async def start_cmd(message: types.Message):
     await message.answer(
-        'Данный бот предназначен для (текст описания бота). Отвечайте на вопросы исключительно с помощью кнопок выбора.',
+        'Данный бот предназначен для (текст описания бота).'
+        '\nОтвечайте на вопросы исключительно с помощью кнопок выбора.'
+        '\nКоманда /start запускает тест.'
+        '\nКоманда /stop останавливает тест, все данные будут потеряны.',
         reply_markup=del_keyboard)
 
 
