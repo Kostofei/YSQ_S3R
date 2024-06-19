@@ -1,6 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
-from data_file.answers_list import answers, answers_extended
+from data_file.answers_list import answers
 
 
 answer_keyboard = ReplyKeyboardMarkup(
