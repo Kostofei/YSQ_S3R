@@ -59,35 +59,55 @@ async def start_cmd(message: types.Message, state: FSMContext):
 @user_private_router.message(Command("info"))
 async def info_cmd(message: types.Message):
     """ Функция вывода информация о тесте """
-    await message.answer(
-        'Данный бот предназначен для (текст описания бота).'
-        '\nОтвечайте на вопросы исключительно с помощью кнопок выбора.'
-        '\nКоманда /start запускает тест.'
-        '\nКоманда /stop останавливает тест, все данные будут потеряны.',
-        reply_markup=del_keyboard)
+
+    info_text = (
+        'Данный бот предназначен для прохождения тестов.\n'
+        'Пользователи должны отвечать на вопросы, используя предложенные кнопки выбора.\n'
+        'Основные команды:\n'
+        '- /start: Запуск теста.\n'
+        '- /stop: Остановка теста, все данные будут потеряны.'
+    )
+
+    await message.answer(info_text, reply_markup=del_keyboard)
 
 
 @user_private_router.message(F.text.lower() == "стоп")
 @user_private_router.message(Command("stop"))
 async def stop_cmd(message: types.Message, state: FSMContext):
-    """ Функция остановки теста """
+    """
+    Функция остановки теста.
+
+    Останавливает текущий тест и очищает состояние пользователя. Если тест не запущен,
+    уведомляет пользователя о необходимости запуска.
+    """
+
     current_state = await state.get_state()
     if current_state:
         await state.clear()
-        await message.answer("Тест остановлен", reply_markup=del_keyboard)
+        stop_message = "Тест остановлен"
     else:
-        await message.answer("Тест не запущен, для запуска теста введите /start", reply_markup=del_keyboard)
+        stop_message = "Тест не запущен, для запуска теста введите /start"
 
+    await message.answer(stop_message, reply_markup=del_keyboard)
 
 @user_private_router.message(F.text.casefold() == 'назад')
 async def handle_question_backward(message: types.Message, state: FSMContext):
-    """ Функция отмены последнего ответа на вопрос """
+    """
+    Функция для отмены последнего ответа и возвращения к предыдущему вопросу.
+
+    Проверяет текущее состояние пользователя и переводит его на предыдущий шаг.
+    """
+
     current_state = await state.get_state()
+
     if current_state == QuestionList.question01:
-        await message.answer('Предидущего шага нет, или введите название товара или напишите "отмена"')
+        await message.answer('Предыдущего шага нет, или ответьте на вопрос или напишите "/stop"')
         return
+
     previous = None
-    for step in QuestionList.__all_states__:
+    all_states = QuestionList.__all_states__
+
+    for step in all_states:
         if step.state == current_state:
             await state.set_state(previous)
             current_question_number = int(current_state.split(':')[1][-2:]) - 1
@@ -100,7 +120,10 @@ async def handle_question_backward(message: types.Message, state: FSMContext):
 
 @user_private_router.message(lambda message: message.text in [i for i in answers.values()])
 async def handle_question(message: types.Message, state: FSMContext):
-    """ Функция записываем ответы на вопросы по тесту """
+    """
+    Функция записываем ответы на вопросы по тесту
+    """
+
     current_state = await state.get_state()
     user_id = message.from_user.id
     current_time = time.time()
@@ -116,6 +139,7 @@ async def handle_question(message: types.Message, state: FSMContext):
         current_question_number = int(current_state.split(':')[1][-2:])
         await state.update_data({f'question{current_question_number:02}': message.text})
         next_question_number = current_question_number + 1
+
         if next_question_number <= 10:
             last_message_time[user_id] = current_time
             await message.answer(f"{next_question_number}. {questions[next_question_number]}",
