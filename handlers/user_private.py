@@ -1,5 +1,4 @@
 import time
-from pprint import pprint
 
 from aiogram import F, types, Router
 from aiogram.enums import ParseMode
@@ -112,7 +111,7 @@ async def complete_survey(message: types.Message, state: FSMContext):
     await message.answer('Вы ответили на все вопросы, вот Ваш результат:', reply_markup=del_keyboard)
     data = await state.get_data()
 
-    pprint(message.from_user.first_name, data)
+    print(message.from_user.first_name, data)
 
     for key, value in data.items():
         for scheme in schemes:
