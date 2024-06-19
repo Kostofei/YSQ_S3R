@@ -23,7 +23,7 @@ user_private_router.message.filter(ChatTypeFilter(['private']))
 last_message_time = {}
 
 # Время в секундах, которое должно пройти перед следующей отправкой сообщения
-TIME_LIMIT = 0.5
+TIME_LIMIT = 1
 
 # Словарь для данных теста
 users_test_data = {}
