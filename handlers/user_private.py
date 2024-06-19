@@ -39,8 +39,18 @@ class QuestionList(StatesGroup):
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message, state: FSMContext):
     """ Функция для старта теста """
+    user_id = message.from_user.id
+
     print('Я сработал', time.strftime("%H:%M", time.localtime()), message.from_user.first_name)  # удалить
-    users_test_data[message.from_user.id] = copy.deepcopy(schemes)
+
+    # Инициализация данных пользователя
+    if user_id not in users_test_data:
+        users_test_data[user_id] = copy.deepcopy(schemes)
+    else:
+        del users_test_data[user_id]
+        users_test_data[user_id] = copy.deepcopy(schemes)
+
+    # Отправка первого вопроса и установка состояния
     await message.answer(f"1. {questions[1]}", reply_markup=answer_keyboard)
     await state.set_state(QuestionList.question01)
 
