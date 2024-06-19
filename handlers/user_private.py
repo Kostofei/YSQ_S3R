@@ -153,7 +153,10 @@ async def handle_question(message: types.Message, state: FSMContext):
 
 @user_private_router.message(F.text)
 async def error_message_text(message: types.Message, state: FSMContext):
-    """ Функция проверяет введенные данные """
+    """
+    Функция проверяет введенные данные
+    """
+
     current_state = await state.get_state()
     if current_state:
         await message.answer('Вводите ответы с помощью клавиатуры')
@@ -163,7 +166,10 @@ async def error_message_text(message: types.Message, state: FSMContext):
 
 
 async def complete_survey(message: types.Message, state: FSMContext):
-    """ Функция вывода данный по тесту """
+    """
+    Функция вывода данный по тесту
+    """
+
     bot = complete_survey.bot
 
     await message.answer('Вы ответили на все вопросы, вот Ваш результат:', reply_markup=del_keyboard)
