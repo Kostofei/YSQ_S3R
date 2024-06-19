@@ -1,3 +1,5 @@
+import copy
+import logging
 import time
 
 from aiogram import F, types, Router
@@ -21,10 +23,11 @@ user_private_router.message.filter(ChatTypeFilter(['private']))
 last_message_time = {}
 
 # Время в секундах, которое должно пройти перед следующей отправкой сообщения
-TIME_LIMIT = 1
+TIME_LIMIT = 0.5
 
 # Словарь для данных теста
-data_test = {}
+users_test_data = {}
+
 
 class QuestionList(StatesGroup):
     """ Класс QuestionList представляет группу состояний для определения
@@ -36,9 +39,8 @@ class QuestionList(StatesGroup):
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message, state: FSMContext):
     """ Функция для старта теста """
-    print('Я сработал', time.strftime("%H:%M", time.localtime()), message.from_user.first_name) # удалить
-    for scheme in schemes:
-        scheme[3] = 0
+    print('Я сработал', time.strftime("%H:%M", time.localtime()), message.from_user.first_name)  # удалить
+    users_test_data[message.from_user.id] = copy.deepcopy(schemes)
     await message.answer(f"1. {questions[1]}", reply_markup=answer_keyboard)
     await state.set_state(QuestionList.question01)
 
@@ -104,7 +106,7 @@ async def handle_question(message: types.Message, state: FSMContext):
         current_question_number = int(current_state.split(':')[1][-2:])
         await state.update_data({f'question{current_question_number:02}': message.text})
         next_question_number = current_question_number + 1
-        if next_question_number <= 90:
+        if next_question_number <= 10:
             last_message_time[user_id] = current_time
             await message.answer(f"{next_question_number}. {questions[next_question_number]}",
                                  reply_markup=answer_keyboard_extended)
@@ -129,22 +131,35 @@ async def error_message_text(message: types.Message, state: FSMContext):
 async def complete_survey(message: types.Message, state: FSMContext):
     """ Функция вывода данный по тесту """
     bot = complete_survey.bot
+
     await message.answer('Вы ответили на все вопросы, вот Ваш результат:', reply_markup=del_keyboard)
-    data = await state.get_data()
 
-    print(message.from_user.first_name)  # удалить
-    for key, value in data.items():  # удалить
-        print(key, ':', value)  # удалить
+    try:
+        data = await state.get_data()
+        user_id = message.from_user.id
 
-    for key, value in data.items():
-        for scheme in schemes:
-            if int(key[-2:]) in scheme[2]:
-                scheme[3] += int(value[0])
+        for key, value in data.items():
+            question_id = int(key[-2:])
+            answer_score = int(value[0])
 
-    result_text = '\n'.join([f"{scheme[0]} {scheme[1]} - {(scheme[3] - 5) / 25 * 100:.0f}%" for scheme in schemes])
-    await message.answer(result_text, parse_mode=ParseMode.MARKDOWN)
+            for user_test_data in users_test_data[user_id]:
+                if question_id in user_test_data[2]:
+                    user_test_data[3] += answer_score
+                    break
 
-    await state.clear()
+        result_text = '\n'.join(
+            [f"{user_test_data[0]} {user_test_data[1]} - "
+             f"{(user_test_data[3] - 5) / 25 * 100:.0f}%"
+             for user_test_data in users_test_data[user_id]]
+        )
+        await message.answer(result_text, parse_mode=ParseMode.MARKDOWN)
 
-    document = FSInputFile('data_file/Краткое_описание_Ранних_Дезадаптивных_Схем.docx')
-    await bot.send_document(message.chat.id, document)
+        await state.clear()
+        del users_test_data[user_id]
+
+        document = FSInputFile('data_file/Краткое_описание_Ранних_Дезадаптивных_Схем.docx')
+        await bot.send_document(message.chat.id, document)
+
+    except Exception as e:
+        await message.answer("Произошла ошибка при обработке ваших данных. Пожалуйста, попробуйте позже.")
+        logging.exception("Error while completing survey: ", exc_info=e)
