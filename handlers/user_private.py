@@ -140,7 +140,7 @@ async def handle_question(message: types.Message, state: FSMContext):
         await state.update_data({f'question{current_question_number:02}': message.text})
         next_question_number = current_question_number + 1
 
-        if next_question_number <= 10:
+        if next_question_number <= 90:
             last_message_time[user_id] = current_time
             await message.answer(f"{next_question_number}. {questions[next_question_number]}",
                                  reply_markup=answer_keyboard_extended)
