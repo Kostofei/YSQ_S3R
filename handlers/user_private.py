@@ -1,4 +1,5 @@
 import time
+from pprint import pprint
 
 from aiogram import F, types, Router
 from aiogram.enums import ParseMode
@@ -12,23 +13,20 @@ from data_file.questions_list import questions
 from data_file.schemes_list import schemes
 
 from filters.chat_types import ChatTypeFilter
-from kbds.reply import del_keyboard, answer_keyboard
+from kbds.reply import del_keyboard, answer_keyboard, answer_keyboard_extended
 
 user_private_router = Router()
 user_private_router.message.filter(ChatTypeFilter(['private']))
 
 
-class Form(StatesGroup):
-    def __init__(self):
-        for i in range(1, 91):
-            setattr(self, f"question{i:02d}", State(state=f'question{i:02d}', group_name='QuestionList'))
-
-
-QuestionList = Form()
+class QuestionList(StatesGroup):
+    for i in range(1, 91):
+        locals()[f"question{i:02d}"] = State()
 
 
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message, state: FSMContext):
+    """ Старт теста """
     print('Я сработал', time.strftime("%H:%M", time.localtime()), message.from_user.first_name)
     for scheme in schemes:
         scheme[3] = 0
@@ -39,6 +37,7 @@ async def start_cmd(message: types.Message, state: FSMContext):
 @user_private_router.message(F.text.lower() == "информация")
 @user_private_router.message(Command("info"))
 async def start_cmd(message: types.Message):
+    """ Информация о тесте """
     await message.answer(
         'Данный бот предназначен для (текст описания бота).'
         '\nОтвечайте на вопросы исключительно с помощью кнопок выбора.'
@@ -50,6 +49,7 @@ async def start_cmd(message: types.Message):
 @user_private_router.message(F.text.lower() == "стоп")
 @user_private_router.message(Command("stop"))
 async def start_cmd(message: types.Message, state: FSMContext):
+    """ Останавливает тест """
     current_state = await state.get_state()
     if current_state:
         await state.clear()
@@ -58,15 +58,36 @@ async def start_cmd(message: types.Message, state: FSMContext):
         await message.answer("Тест не запущен, для запуска теста введите /start", reply_markup=del_keyboard)
 
 
+@user_private_router.message(F.text.casefold() == 'назад')
+async def handle_question(message: types.Message, state: FSMContext):
+    """ Отмена последнего ввода """
+    current_state = await state.get_state()
+    if current_state == QuestionList.question01:
+        await message.answer('Предидущего шага нет, или введите название товара или напишите "отмена"')
+        return
+    previous = None
+    for step in QuestionList.__all_states__:
+        if step.state == current_state:
+            await state.set_state(previous)
+            current_question_number = int(current_state.split(':')[1][-2:]) - 1
+            await message.answer(f"Вы вернулись к прошлому вопросу\n"
+                                 f"{current_question_number}. {questions[current_question_number]}",
+                                 reply_markup=answer_keyboard)
+            return
+        previous = step
+
+
 @user_private_router.message(lambda message: message.text in [i for i in answers.values()])
 async def handle_question(message: types.Message, state: FSMContext):
+    """ Записываем входные данные по тесту """
     current_state = await state.get_state()
     if current_state:
         current_question_number = int(current_state.split(':')[1][-2:])
         await state.update_data({f'question{current_question_number:02}': message.text})
         next_question_number = current_question_number + 1
         if next_question_number <= 90:
-            await message.answer(f"{next_question_number}. {questions[next_question_number]}")
+            await message.answer(f"{next_question_number}. {questions[next_question_number]}",
+                                 reply_markup=answer_keyboard_extended)
             await state.set_state(getattr(QuestionList, f'question{next_question_number:02}'))
         else:
             await complete_survey(message, state)
@@ -76,6 +97,7 @@ async def handle_question(message: types.Message, state: FSMContext):
 
 @user_private_router.message(F.text)
 async def error_message_text(message: types.Message, state: FSMContext):
+    """ Если не корректный ввод даннх """
     current_state = await state.get_state()
     if current_state:
         await message.answer('Вводите ответы с помощью клавиатуры')
@@ -85,9 +107,12 @@ async def error_message_text(message: types.Message, state: FSMContext):
 
 
 async def complete_survey(message: types.Message, state: FSMContext):
+    """ Выводит данные в бота """
     bot = complete_survey.bot
     await message.answer('Вы ответили на все вопросы, вот Ваш результат:', reply_markup=del_keyboard)
     data = await state.get_data()
+
+    pprint(message.from_user.first_name, data)
 
     for key, value in data.items():
         for scheme in schemes:
