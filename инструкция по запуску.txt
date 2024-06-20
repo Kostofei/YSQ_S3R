@@ -1,0 +1,4 @@
+python -m venv .venv - установка venv
+.venv\Scripts\activate - активация venv
+pip install -r requirements.txt - установть все что нам надо для пректа
+python app.py - запускаем бота

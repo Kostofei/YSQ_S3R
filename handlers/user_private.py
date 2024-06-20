@@ -51,7 +51,8 @@ async def start_cmd(message: types.Message, state: FSMContext):
         users_test_data[user_id] = copy.deepcopy(schemes)
 
     # Отправка первого вопроса и установка состояния
-    await message.answer(f"1. {questions[1]}", reply_markup=answer_keyboard)
+    await message.answer("Отвечая на вопросы теста, вы соглашаетесь с обработкой ваших ответов.\n"
+        f"\n1. {questions[1]}", reply_markup=answer_keyboard)
     await state.set_state(QuestionList.question01)
 
 
