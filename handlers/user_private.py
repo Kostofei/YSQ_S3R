@@ -61,9 +61,13 @@ async def info_cmd(message: types.Message):
     """ Функция вывода информация о тесте """
 
     info_text = (
-        'Данный бот предназначен для прохождения тестов.\n'
-        'Пользователи должны отвечать на вопросы, используя предложенные кнопки выбора.\n'
-        'Основные команды:\n'
+        'Тест "Диагностика ранних дезадаптивных схем" (Young Schema Questionnaire, YSQ-S3R, версия 2014 года).\n'
+        'Автор: Jeffrey Young\n'
+        'Литература: Касъяник П.М.Диагностика ранних дезадаптивных схем / П.М.Касьяник, Е.В.Романова. - СПб.: '
+        'Изд - во Политехи, ун - та, 2016.\n'
+        '\n90 вопросов '
+        '\nВремя прохождения теста около 15 мин.\n'
+        '\nОсновные команды:\n'
         '- /start: Запуск теста.\n'
         '- /stop: Остановка теста, все данные будут потеряны.'
     )
@@ -112,8 +116,7 @@ async def handle_question_backward(message: types.Message, state: FSMContext):
             await state.set_state(previous)
             current_question_number = int(current_state.split(':')[1][-2:]) - 1
             await message.answer(f"Вы вернулись к прошлому вопросу\n"
-                                 f"{current_question_number}. {questions[current_question_number]}",
-                                 reply_markup=answer_keyboard)
+                                 f"{current_question_number}. {questions[current_question_number]}")
             return
         previous = step
 
